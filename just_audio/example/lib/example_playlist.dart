@@ -26,13 +26,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late AudioPlayer _player;
   final _playlist = ConcatenatingAudioSource(children: [
     AudioSource.uri(
-      Uri.parse(
-          "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3"),
+      Uri.parse("https://media.transistor.fm/47bdff84/f15e862d.mp3"),
       tag: AudioMetadata(
-        album: "Science Friday",
-        title: "A Salute To Head-Scratching Science",
+        album: "Metacast: Behind the scenes",
+        title:
+            "55. Leaving Google and Amazon to bootstrap Metacast (rerun of ep. 24)",
         artwork:
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg",
+            "https://img.transistor.fm/gFgHIugaCcEqhUXgQfrG77jYK5Qw_qsB2dWJoVI7cew/rs:fill:3000:3000:1/q:60/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS9lcGlz/b2RlLzE3OTc1NTcv/MTcxMDg2NTMxNy1h/cnR3b3JrLmpwZw.jpg",
       ),
     ),
     AudioSource.uri(
@@ -173,6 +173,18 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 ),
               ),
               ControlButtons(_player),
+              StreamBuilder<PositionData>(
+                stream: _positionDataStream,
+                builder: (context, snapshot) {
+                  final positionData = snapshot.data;
+                  return Column(
+                    children: [
+                      Text('Position is: ${positionData?.position?.inSeconds}'),
+                      Text('Duration is: ${positionData?.duration?.inSeconds}'),
+                    ],
+                  );
+                },
+              ),
               StreamBuilder<PositionData>(
                 stream: _positionDataStream,
                 builder: (context, snapshot) {
@@ -384,24 +396,13 @@ class ControlButtons extends StatelessWidget {
             onPressed: player.hasNext ? player.seekToNext : null,
           ),
         ),
-        StreamBuilder<double>(
-          stream: player.speedStream,
-          builder: (context, snapshot) => IconButton(
-            icon: Text("${snapshot.data?.toStringAsFixed(1)}x",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            onPressed: () {
-              showSliderDialog(
-                context: context,
-                title: "Adjust speed",
-                divisions: 10,
-                min: 0.5,
-                max: 1.5,
-                value: player.speed,
-                stream: player.speedStream,
-                onChanged: player.setSpeed,
-              );
-            },
-          ),
+        IconButton(
+          icon: const Icon(Icons.keyboard_double_arrow_right),
+          onPressed: () {
+            // Shortcut to quickly jump to close to the end. Strangely,
+            // there doesn't seem to be a sync problem with this.
+            player.seek(const Duration(seconds: 5560));
+          },
         ),
       ],
     );
